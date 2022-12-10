@@ -1,0 +1,90 @@
+{
+  "Comment": "Recover files belonging to a granule",
+  "StartAt": "ExtractFilepaths",
+  "TimeoutSeconds": 18000,
+  "States": {
+    "ExtractFilepaths": {
+      "Parameters": {
+        "cma": {
+          "event.$": "$",
+          "ReplaceConfig": {
+            "FullMessage": true
+          },
+          "task_config": {
+            "buckets": "{$.meta.buckets}",
+            "fileBucketMaps": "{$.meta.collection.files}",
+            "excludedFileExtensions": "{$.meta.collection.meta.orca.excludedFileExtensions}"
+          }
+        }
+      },
+      "Type": "Task",
+      "Resource": "${orca_lambda_extract_filepaths_for_granule_arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.exception",
+          "Next": "WorkflowFailed"
+        }
+      ],
+      "Next": "RequestFiles"
+    },
+    "RequestFiles": {
+      "Parameters": {
+        "cma": {
+          "event.$": "$",
+          "ReplaceConfig": {
+            "FullMessage": true
+          },
+          "task_config": {
+            "asyncOperationId": "{$.cumulus_meta.asyncOperationId}",
+            "s3MultipartChunksizeMb": "{$.meta.collection.meta.s3MultipartChunksizeMb}",
+            "defaultBucketOverride": "{$.meta.collection.meta.orca.defaultBucketOverride}",
+            "defaultRecoveryTypeOverride": "{$.meta.collection.meta.orca.defaultRecoveryTypeOverride}"
+          }
+        }
+      },
+      "Type": "Task",
+      "Resource": "${orca_lambda_request_files_arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 6,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.exception",
+          "Next": "WorkflowFailed"
+        }
+      ],
+      "End": true
+    },
+    "WorkflowFailed": {
+      "Type": "Fail",
+      "Cause": "Workflow failed"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "https://github.com/nasa/cumulus-orca/blob/master/tasks/post_to_database/schemas/new_job_input.json",
+	"title": "post_to_database Lambda Input (new_job)",
+	"description": "The input for the post_to_database Lambda when posting the new status for a job and its files.",
+	"type": "object",
+	"properties": {
+		"jobId": {
+			"description": "The unique ID of the asyncOperation.",
+			"type": "string"
+		},
+		"granuleId": {
+			"description": "The unique ID of the granule to retrieve status for.",
+			"type": "string"
+		},
+		"requestTime": {
+			"description": "The time, in UTC and isoformat, when the request to restore the granule was initiated.",
+			"type": "string",
+			"pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?(Z)?\\+00:00$"
+		},
+        "archiveDestination": {
+            "description": "The archive destination for the individual files.",
+            "type": "string"
+        },
+		"files": {
+			"description": "Description and status of the files within the given granule.",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"filename": {
+						"description": "The name and extension of the file.",
+						"type": "string"
+					},
+                    "keyPath": {
+                        "description": "The key of the file to restore.",
+                        "type": "string"
+                    },
+					"restoreDestination": {
+						"description": "The name of the glacier bucket the granule is being copied to.",
+						"type": "string"
+					},
+					"multipartChunksizeMb": {
+						"description": "The maximum size of chunks to use when copying.",
+						"type": ["integer", "null"]
+					},
+					"statusId": {
+						"description": "The status_id of the restoration of the file. May be 'pending' or 'failed'.",
+						"type": "integer",
+						"pattern": "^(1|3)$"
+					},
+					"errorMessage": {
+						"description": "If the restoration of the file errored, the error will be stored here.",
+						"type": "string"
+					},
+                    "requestTime": {
+                        "description": "The time the restore was requested, in UTC and iso-format.",
+                        "type": "string",
+                        "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?(Z)?\\+00:00$"
+                    },
+                    "lastUpdate": {
+                        "description": "The last time the file's status changed, in UTC and iso-format.",
+                        "type": "string",
+                        "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?(Z)?\\+00:00$"
+                    },
+                    "completionTime": {
+                        "description": "The time the restore was completed, in UTC and iso-format.",
+                        "type": "string",
+                        "pattern": "^(-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(.[0-9]+)?(Z)?\\+00:00$"
+                    }
+				},
+				"required": [ "filename", "keyPath","restoreDestination", "s3MultipartChunksizeMb", "statusId", "requestTime", "lastUpdate" ]
+			},
+			"uniqueItems": true
+		}
+	},
+	"required": [ "jobId", "granuleId", "requestTime", "archiveDestination", "files" ]
+}
